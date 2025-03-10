@@ -4,123 +4,62 @@ using namespace std;
 
 int main() {
 
-    int n,m;
-    cin>>n>>m;
+    int n;
+    cin>>n;
 
-
-    vector<vector<int>> allocation(n,vector<int> (m));
-    vector<vector<int>> maximum(n,vector<int> (m));
-    vector<int> available(m);
-    vector<int> instances(m);
-
-
-    vector<vector<int>> need(n,vector<int> (m));
-
-    for(int i=0;i<m;i++){
-        int x;
-        cin>>x;
-
-        available[i] = x;
-        instances[i] = x;
-
-
+    vector<int> arr(n+1);
+    for(int i=1;i<=n;i++){
+        cin>>arr[i];
     }
 
-    for(int i=0;i<n;i++){
-        for(int j=0;j<m;j++){
-            int x;
-            cin>>x;
+    vector<vector<int>> adj(n+1);
+    for(int i=1;i<n;i++){
+        int a,b;
+        cin>>a>>b;
 
-            allocation[i][j] = x;
-        }
-
+        adj[a].push_back(b);
+        adj[b].push_back(a);
     }
 
-    for(int i=0;i<n;i++){
-        for(int j=0;j<m;j++){
-            int x;
-            cin>>x;
+    vector<vector<int>> dp(n+1,vector<int> (2,0));
 
-            maximum[i][j] = x;
-        }
+    //yaha -1 as initial value lene ki zarurat nahi as hum every node se ek bar hi traverse karte hai.
 
-    }
+    auto dfs = [&](int node, int parent, auto && self){
+        dp[node][1] = arr[node];
+        dp[node][0] = 0;
 
-
-    for(int i=0;i<n;i++){
-        for(int j=0;j<m;j++){
-            available[j] -= allocation[i][j];
-            
-        }
-
-    }
-
-
-
-    for(int i=0;i<n;i++){
-        for(int j=0;j<m;j++){
-            need[i][j] = maximum[i][j]-allocation[i][j];
-        }
-
-
-    }
-
-    vector<int> visited(n,0);
-    vector<int> order;
-
-
-    bool allDone = false;
-
-
-
-
-    while(!allDone){
-
-        for(int i=0;i<n;i++){
-
-            bool done = true;
-            for(int j=0;j<m;j++){
-                if(need[i][j] > available[j]){
-                    done = false;
-                    break;
-                }
-
-            }
-
-            if((done==true )&& (visited[i]==0)){
-                visited[i] = 1;
-                order.push_back(i);
-                for(int j=0;j<m;j++){
-                    available[j] += allocation[i][j];
-                }
-
-            }
-
-
-
-        }
-
-        bool okay = true;
-        for(int i=0;i<n;i++){
-            if(visited[i] == 0){
-                okay = false;
-                break;
+        for(auto &it : adj[node]){
+            if(it != parent){
+                self(it,node,self);
+                dp[node][1] += dp[it][0];
+                dp[node][0] += max(dp[it][0],dp[it][1]);
             }
         }
-
-        if(okay){
-            allDone = true;
-        }
-
     }
 
-    for(int i=0;i<n;i++){
-        cout<<"P"<<order[i]<<" "<<endl;
-    }
+    dfs(1,-1,dfs);
 
-    
+    cout<<max(dp[1][0],dp[1][1])<<endl;
+
+
 
 
 
     
 }
+
+/*
+House Robber problem similar
+
+Given a tree T of n nodes, where each node has Ci coins. You need to choose a subset of nodes s.t every pair of nodes in this s
+subset is not connected by an edge. FInd the max number of coins you can get.
+
+Idea :
+Ya to hum kisi node ko pick kar sakte hai nahi 
+if maine kisi node ko pick kiya then mai uske koi bhi child pick nahi kar sakti 
+dp[i][1] = arr[i] + summation(dp[j][0]) , j = child 
+if maine vo node pick nahi kiya then ya to uske chikd pick kar sakti hu ya nahi bhi, i will choose the one with the max answer
+dp[i][0] = 0 + summation(max(dp[j][0],dp[j][1])) , j = child
+
+*/
